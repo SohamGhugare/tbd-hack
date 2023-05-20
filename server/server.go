@@ -1,29 +1,50 @@
 package server
 
 import (
-	"log"
+	"fmt"
+	"io"
 
-	socketio "github.com/googollee/go-socket.io"
+	"golang.org/x/net/websocket"
 )
 
-func GetServer() *socketio.Server {
-	server := socketio.NewServer(nil)
+type Server struct {
+	conns map[*websocket.Conn]bool
+}
 
-	server.OnConnect("/", func(s socketio.Conn) error {
-		s.SetContext("")
-		log.Println("Client connected:", s.ID())
-		return nil
-	})
+func NewServer() *Server {
+	return &Server{
+		conns: make(map[*websocket.Conn]bool),
+	}
+}
 
-	server.OnEvent("/", "chat message", func(s socketio.Conn, msg string) {
-		log.Println("Received message:", msg)
-		server.BroadcastToRoom("/", "chat", "chat message", msg)
-	})
+func (s *Server) HandleWS(ws *websocket.Conn) {
+	fmt.Println("New incoming connection:", ws.RemoteAddr())
+	s.conns[ws] = true
+	s.ReadLoop(ws)
+}
 
-	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		log.Println("Client disconnected:", s.ID())
-	})
+func (s *Server) ReadLoop(ws *websocket.Conn){
+	buf := make([]byte, 1024)
+	for {
+		n, err := ws.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Error reading:", err)
+			continue
+		}
+		msg := buf[:n]
+		s.broadcast(msg)
+	}
+}
 
-
-	return server
+func (s *Server) broadcast(b []byte) {
+	for ws := range s.conns {
+		go func(ws *websocket.Conn) {
+			if _, err := ws.Write(b); err != nil {
+				fmt.Println("Error:", err)
+			}
+		}(ws)
+	}
 }

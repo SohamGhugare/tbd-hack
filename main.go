@@ -1,18 +1,17 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"tbdhack/server"
+
+	"golang.org/x/net/websocket"
 )
 
 func main(){
-	server := server.GetServer()
+	server := server.NewServer()
+	http.Handle("/ws", websocket.Handler(server.HandleWS))
 
-	go server.Serve()
-	defer server.Close()
-
-	http.Handle("/socket.io/", server)
-	log.Println("Server started on localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Listening on port 8080...")
+	http.ListenAndServe(":8080", nil)
 }
