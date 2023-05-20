@@ -1,21 +1,13 @@
-import socketio
+import websockets
+import asyncio
 
-sio = socketio.Client(logger=True)
+async def connect():
+    async with websockets.connect("ws://localhost:8080/ws") as ws:
+        await ws.send("Hello")
+        print("Message sent!")
 
-@sio.event
-def connect():
-    print('Connected to server')
+    while True:
+        response = await ws.recv()
+        print("Received message:", response)
 
-@sio.event
-def disconnect():
-    print('Disconnected from server')
-
-@sio.on('chat message')
-def handle_message(msg):
-    print('Received message:', msg)
-
-sio.connect('http://localhost:8080')
-
-while True:
-    message = input('Enter a message: ')
-    sio.emit('chat message', message)
+asyncio.get_event_loop().run_until_complete(connect())
