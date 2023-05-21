@@ -10,7 +10,7 @@ import (
 
 func main(){
 	server := server.NewServer()
-	http.Handle("/ws", websocket.Handler(server.HandleWS))
+	http.Handle("/", websocket.Handler(server.HandleWS))
 
 	fmt.Println("Listening on port 8080...")
 	http.ListenAndServe(":8080", nil)
