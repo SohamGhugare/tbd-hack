@@ -1,15 +1,15 @@
-import asyncio
 import websockets
+import asyncio
+from managers.room_manager import RoomManager
 
-room_id = input("Enter room code: ")
+manager = RoomManager()
 
-async def connect(room_id):
-    uri = "ws://127.0.0.1:8080/{room_id}/ws"
-    async with websockets.connect(uri) as websocket:
-        print(f"Connected to room {room_id}")
+async def connect():
+    code = int(input("Enter room code: "))
+    async with manager.get_connection(code) as websocket:
+        print(f"Connected to room {code}")
         while True:
             msg = input(">>> ")
-
             # Exiting 
             if msg == "exit":
                 break
