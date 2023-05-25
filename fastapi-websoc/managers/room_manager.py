@@ -12,7 +12,6 @@ class RoomManager:
         rooms.append_room(room_id)
 
     def get_connection(self, room_id: int):
-        print(room_id, list(map(int, rooms.get_rooms()["rooms"])))
         if room_id in list(map(int, rooms.get_rooms()["rooms"])):
             return websockets.connect(f"ws://127.0.0.1:8080/{room_id}/ws")
         else:
